@@ -65,7 +65,7 @@ body {
   transition: color 0.25s ease, opacity 0.25s ease;
 }
 
-.viewer button:hover { color: #ffcc00; }
+.viewer button:hover { color: #0084ff; }
 .viewer button:disabled { opacity: 0.35; pointer-events: none; }
 
 /* Sliding area: total width = 800 - 56 - 56 = 688px */
@@ -116,9 +116,6 @@ body {
 /* Title */
 .folder-box h3 {
   margin: 0 0 10px;
-  font-size: 1.1rem;
-  border-bottom: 2px solid rgba(255,255,255,0.2);
-  padding-bottom: 5px;
 }
 
 /* Items */
@@ -147,7 +144,8 @@ body {
   text-overflow: ellipsis;    /* long titles won’t blow layout */
 }
 
-.folder-box a:hover { color: #ffcc00; }
+.folder-box a:hover { color: #0084ff; }
+body.light-theme .folder-box a:hover { color: #0084ff; }
 
 /* Dark is default */
 .folder-box {
@@ -172,16 +170,6 @@ body.light-theme .folder-box a {
 body.light-theme .folder-box h3 {
   border-bottom: 2px solid rgba(24, 24, 24, 0.644);
 }
-
-body.light-theme .folder-box a:hover {
-  color: #0077cc;
-}
-
-body.light-theme .viewer button:hover { 
-  color: #0077cc;
-}
-
-
 
 /* The switch - the container */
 .switch {
@@ -243,4 +231,38 @@ input:checked + .slider:before {
 /* Optional: add glowing effect on toggle movement */
 .theme-switch input:checked + .slider:before {
   box-shadow: 0 0 5px #fff;
+}
+
+.folder-title-container {
+  display: flex;
+  align-items: center;
+  gap: 6px; /* space between pin and title */
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+  border-bottom: 2px solid rgba(255,255,255,0.2);
+}
+
+.folder-pin {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+  cursor: pointer;
+  color: #888; /* outline by default */
+  transition: color 0.2s, transform 0.2s;
+}
+
+.folder-pin svg {
+  width: 25px;
+  height: 25px;
+  display: block;
+}
+
+.folder-pin svg[fill="currentColor"] {
+  color: #0084ff; /* gold for pinned */
+}
+
+/* optional: hover effect */
+.folder-pin:hover {
+  transform: scale(1.2);
+  color: #0084ff;
 }

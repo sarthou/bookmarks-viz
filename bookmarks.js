@@ -2,6 +2,21 @@ let allFolders = [];
 let bookmarkTags = {}; // { bookmarkId: ["tag1","tag2"] }
 let currentPage = 0;
 const foldersPerPage = 3;
+let pinnedFolders = new Set();
+
+function togglePin(folderId, pinElement) {
+  if (pinnedFolders.has(folderId)) {
+    pinnedFolders.delete(folderId);
+  } else {
+    pinnedFolders.add(folderId);
+  }
+
+  // Save updated list
+  browser.storage.local.set({ pinnedFolders: Array.from(pinnedFolders) });
+
+  // Re-render pages so pinned folders move to top
+  renderAllPages();
+}
 
 /* --- Helpers --- */
 function createBookmarkItem(b) {
@@ -52,21 +67,56 @@ function updatePageTransform(folders = allFolders) {
 
 /* Render all pages for the given folder set */
 function renderAllPages(folders = allFolders) {
+  const sortedFolders = folders.slice().sort((a, b) => {
+    const aPinned = pinnedFolders.has(a.id);
+    const bPinned = pinnedFolders.has(b.id);
+    if (aPinned && !bPinned) return -1;
+    if (!aPinned && bPinned) return 1;
+    return a.title.localeCompare(b.title);
+  });
+
+
   const wrapper = document.getElementById("folders");
   wrapper.innerHTML = "";
 
-  for (let i = 0; i < folders.length; i += foldersPerPage) {
+  for (let i = 0; i < sortedFolders.length; i += foldersPerPage) {
     const page = document.createElement("div");
     page.className = "folders-page";
 
-    folders.slice(i, i + foldersPerPage).forEach(folder => {
+    sortedFolders.slice(i, i + foldersPerPage).forEach(folder => {
       const box = document.createElement("div");
       box.className = "folder-box";
+      box.dataset.folderId = folder.id; // required for pin tracking
 
+
+      const titleContainer = document.createElement("div");
+      titleContainer.className = "folder-title-container";
+
+      // --- PIN ---
+      const pin = document.createElement("span");
+      pin.className = "folder-pin";
+      pin.innerHTML = pinnedFolders.has(folder.id) 
+        ? `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L15 8H21L16.5 12L18 18L12 14L6 18L7.5 12L3 8H9L12 2Z" />
+          </svg>` // filled
+        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L15 8H21L16.5 12L18 18L12 14L6 18L7.5 12L3 8H9L12 2Z" />
+          </svg>`; // outline
+
+      pin.addEventListener("click", e => {
+        e.stopPropagation(); // prevent focusing folder
+        togglePin(folder.id, pin);
+      });
+
+      // --- TITLE ---
       const title = document.createElement("h3");
       title.textContent = folder.title || "Untitled Folder";
-      box.appendChild(title);
 
+      titleContainer.appendChild(pin);
+      titleContainer.appendChild(title);
+      box.appendChild(titleContainer);
+
+      // --- BOOKMARK LIST ---
       const list = document.createElement("ul");
       (folder.children || []).forEach(b => {
         if (b.url) list.appendChild(createBookmarkItem(b));
@@ -82,7 +132,7 @@ function renderAllPages(folders = allFolders) {
   currentPage = 0;
   // Ensure first paint is aligned before any transition
   wrapper.style.transform = "translateX(0)";
-  updateArrows(folders);
+  updateArrows(sortedFolders);
 }
 
 /* --- Events --- */
@@ -190,10 +240,6 @@ function loadTags() {
 /* In case the popup frame changes size (rare), keep transform correct */
 window.addEventListener("resize", () => updatePageTransform());
 
-/* Init */
-loadBookmarks();
-loadTags();
-
 /* --- Apply user options --- */
 function applyOptions() {
   browser.storage.local.get(["background", "theme"]).then(res => {
@@ -208,9 +254,18 @@ function applyOptions() {
       document.body.classList.remove("light-theme");
     }
   });
+
+  browser.storage.local.get("pinnedFolders").then(res => {
+  pinnedFolders = new Set(res.pinnedFolders || []);
+});
 }
 
 applyOptions();
+
+/* Init */
+loadBookmarks();
+loadTags();
+
 
 function focusSearchWhenReady(input) {
   function tryFocus() {
