@@ -96,7 +96,7 @@ body {
 
 /* Folder boxes */
 .folder-box {
-  min-width: 0;               /* allow shrinking inside grid */
+  min-width: 192px;
   display: flex;
   flex-direction: column;
   background: rgba(0,0,0,0.6);

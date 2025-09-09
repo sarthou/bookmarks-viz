@@ -169,8 +169,10 @@ function loadBookmarks() {
 }
 
 function loadTags() {
-  browser.bookmarks.getSubTree("tags").then(tree => {
-    const tagsRoot = tree[0];
+  browser.bookmarks.getTree().then(tree => {
+    const rootChildren = tree[0].children || [];
+    const tagsRoot = rootChildren.find(child => child.title === "Tags");
+
     bookmarkTags = {};
 
     if (tagsRoot && tagsRoot.children) {
@@ -184,7 +186,6 @@ function loadTags() {
     }
   });
 }
-
 
 /* In case the popup frame changes size (rare), keep transform correct */
 window.addEventListener("resize", () => updatePageTransform());
