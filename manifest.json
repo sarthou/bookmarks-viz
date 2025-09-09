@@ -3,7 +3,7 @@
   "name": "Bookmarks Visualizer",
   "version": "1.0",
   "description": "Visualize bookmarks with folders, tags, and search.",
-  "permissions": ["bookmarks"],
+  "permissions": ["bookmarks", "storage"],
   "browser_action": {
     "default_popup": "bookmarks.html",
     "default_icon": {
@@ -11,6 +11,7 @@
     }
   },
   "options_ui": {
-    "page": "options.html"
+    "page": "options.html",
+    "open_in_tab": true
   }
 }

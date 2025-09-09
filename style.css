@@ -117,7 +117,7 @@ body {
 .folder-box h3 {
   margin: 0 0 10px;
   font-size: 1.1rem;
-  border-bottom: 1px solid rgba(255,255,255,0.2);
+  border-bottom: 2px solid rgba(255,255,255,0.2);
   padding-bottom: 5px;
 }
 
@@ -148,3 +148,35 @@ body {
 }
 
 .folder-box a:hover { color: #ffcc00; }
+
+/* Dark is default */
+.folder-box {
+  background: rgba(0,0,0,0.6);
+  color: #c9c9c9;
+}
+
+/* Light theme overrides */
+body.light-theme {
+  color: #000;
+}
+
+body.light-theme .folder-box {
+  background: rgba(255,255,255,0.6);
+  color: #1f1f1f;
+}
+
+body.light-theme .folder-box a {
+  color: #1f1f1f;
+}
+
+body.light-theme .folder-box h3 {
+  border-bottom: 2px solid rgba(24, 24, 24, 0.644);
+}
+
+body.light-theme .folder-box a:hover {
+  color: #0077cc;
+}
+
+body.light-theme .viewer button:hover { 
+  color: #0077cc;
+}

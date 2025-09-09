@@ -156,3 +156,22 @@ window.addEventListener("resize", () => updatePageTransform());
 
 /* Init */
 loadBookmarks();
+
+
+/* --- Apply user options --- */
+function applyOptions() {
+  browser.storage.local.get(["background", "theme"]).then(res => {
+    if (res.background) {
+      document.body.style.backgroundImage = `url("${res.background}")`;
+      document.body.style.backgroundSize = "cover";
+      document.body.style.backgroundPosition = "center";
+    }
+    if (res.theme === "light") {
+      document.body.classList.add("light-theme");
+    } else {
+      document.body.classList.remove("light-theme");
+    }
+  });
+}
+
+applyOptions();

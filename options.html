@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bookmarks Visualizer – Options</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      padding: 20px;
+      background: #222;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    h2 { margin-top: 0; }
+    .option {
+      margin-bottom: 20px;
+    }
+    label { display: block; margin-bottom: 6px; }
+    input[type="text"], select {
+      padding: 8px;
+      width: 100%;
+      border-radius: 6px;
+      border: none;
+    }
+    button {
+      background: #ffcc00;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Bookmarks Visualizer – Options</h2>
+
+  <div class="option">
+    <label for="bg">Background image URL:</label>
+    <input type="text" id="bg" placeholder="https://example.com/image.jpg">
+  </div>
+
+  <div class="option">
+    <label for="theme">Theme:</label>
+    <select id="theme">
+      <option value="dark">Dark (black boxes, white text)</option>
+      <option value="light">Light (white boxes, black text)</option>
+    </select>
+  </div>
+
+  <button id="save">Save</button>
+
+  <script src="options.js"></script>
+</body>
+</html>
