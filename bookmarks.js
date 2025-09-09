@@ -1,20 +1,18 @@
+/* --- Globals --- */
 let allFolders = [];
 let bookmarkTags = {}; // { bookmarkId: ["tag1","tag2"] }
 let currentPage = 0;
 const foldersPerPage = 3;
 let pinnedFolders = new Set();
 
-function togglePin(folderId, pinElement) {
+/* --- Pin Handling --- */
+function togglePin(folderId) {
   if (pinnedFolders.has(folderId)) {
     pinnedFolders.delete(folderId);
   } else {
     pinnedFolders.add(folderId);
   }
-
-  // Save updated list
   browser.storage.local.set({ pinnedFolders: Array.from(pinnedFolders) });
-
-  // Re-render pages so pinned folders move to top
   renderAllPages();
 }
 
@@ -65,7 +63,7 @@ function updatePageTransform(folders = allFolders) {
   updateArrows(folders);
 }
 
-/* Render all pages for the given folder set */
+/* --- Rendering --- */
 function renderAllPages(folders = allFolders) {
   const sortedFolders = folders.slice().sort((a, b) => {
     const aPinned = pinnedFolders.has(a.id);
@@ -74,7 +72,6 @@ function renderAllPages(folders = allFolders) {
     if (!aPinned && bPinned) return 1;
     return a.title.localeCompare(b.title);
   });
-
 
   const wrapper = document.getElementById("folders");
   wrapper.innerHTML = "";
@@ -86,29 +83,27 @@ function renderAllPages(folders = allFolders) {
     sortedFolders.slice(i, i + foldersPerPage).forEach(folder => {
       const box = document.createElement("div");
       box.className = "folder-box";
-      box.dataset.folderId = folder.id; // required for pin tracking
+      box.dataset.folderId = folder.id;
 
-
+      // --- Title row with pin ---
       const titleContainer = document.createElement("div");
       titleContainer.className = "folder-title-container";
 
-      // --- PIN ---
       const pin = document.createElement("span");
       pin.className = "folder-pin";
-      pin.innerHTML = pinnedFolders.has(folder.id) 
+      pin.innerHTML = pinnedFolders.has(folder.id)
         ? `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
             <path d="M12 2L15 8H21L16.5 12L18 18L12 14L6 18L7.5 12L3 8H9L12 2Z" />
-          </svg>` // filled
+          </svg>`
         : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 2L15 8H21L16.5 12L18 18L12 14L6 18L7.5 12L3 8H9L12 2Z" />
-          </svg>`; // outline
+          </svg>`;
 
       pin.addEventListener("click", e => {
-        e.stopPropagation(); // prevent focusing folder
-        togglePin(folder.id, pin);
+        e.stopPropagation();
+        togglePin(folder.id);
       });
 
-      // --- TITLE ---
       const title = document.createElement("h3");
       title.textContent = folder.title || "Untitled Folder";
 
@@ -116,7 +111,7 @@ function renderAllPages(folders = allFolders) {
       titleContainer.appendChild(title);
       box.appendChild(titleContainer);
 
-      // --- BOOKMARK LIST ---
+      // --- Bookmarks list ---
       const list = document.createElement("ul");
       (folder.children || []).forEach(b => {
         if (b.url) list.appendChild(createBookmarkItem(b));
@@ -130,12 +125,11 @@ function renderAllPages(folders = allFolders) {
   }
 
   currentPage = 0;
-  // Ensure first paint is aligned before any transition
   wrapper.style.transform = "translateX(0)";
   updateArrows(sortedFolders);
 }
 
-/* --- Events --- */
+/* --- Navigation arrows --- */
 document.getElementById("prev").addEventListener("click", () => {
   if (currentPage > 0) {
     currentPage--;
@@ -151,7 +145,7 @@ document.getElementById("next").addEventListener("click", () => {
   }
 });
 
-/* Search (by title for now) */
+/* --- Search --- */
 document.getElementById("search").addEventListener("input", e => {
   const q = e.target.value.trim().toLowerCase();
   if (!q) {
@@ -161,7 +155,6 @@ document.getElementById("search").addEventListener("input", e => {
   }
 
   const filtered = [];
-
   allFolders.forEach(folder => {
     const folderTitleMatch = (folder.title || "").toLowerCase().includes(q);
 
@@ -179,10 +172,8 @@ document.getElementById("search").addEventListener("input", e => {
     }
 
     if (folderTitleMatch && folder.children) {
-      // Folder matches → keep everything
       filtered.push({ title: folder.title, children: folder.children });
     } else if (matches.length) {
-      // Some children match → keep only them
       filtered.push({ title: folder.title, children: matches });
     }
   });
@@ -191,106 +182,102 @@ document.getElementById("search").addEventListener("input", e => {
   updatePageTransform(filtered);
 });
 
-/* Load bookmarks from both root sections and collect loose bookmarks */
-function loadBookmarks() {
-  browser.bookmarks.getTree().then(tree => {
-    const rootChildren = (tree[0] && tree[0].children) || [];
-    const loose = [];
-    allFolders = [];
+/* --- Bookmarks & Tags --- */
+async function loadBookmarks() {
+  const tree = await browser.bookmarks.getTree();
+  const rootChildren = (tree[0] && tree[0].children) || [];
+  const loose = [];
+  allFolders = [];
 
-    rootChildren.forEach(root => {
-      (root.children || []).forEach(child => {
-        if (child.children) {
-          allFolders.push(child);
-        } else if (child.url) {
-          loose.push(child);
-        }
+  rootChildren.forEach(root => {
+    (root.children || []).forEach(child => {
+      if (child.children) {
+        allFolders.push(child);
+      } else if (child.url) {
+        loose.push(child);
+      }
+    });
+  });
+
+  if (loose.length) {
+    allFolders.unshift({ title: "Loose Bookmarks", children: loose });
+  }
+
+  renderAllPages();
+  updatePageTransform();
+}
+
+async function loadTags() {
+  const tree = await browser.bookmarks.getTree();
+  const rootChildren = tree[0].children || [];
+  const tagsRoot = rootChildren.find(child => child.title === "Tags");
+
+  bookmarkTags = {};
+  if (tagsRoot && tagsRoot.children) {
+    tagsRoot.children.forEach(tagFolder => {
+      const tagName = tagFolder.title;
+      (tagFolder.children || []).forEach(b => {
+        if (!bookmarkTags[b.id]) bookmarkTags[b.id] = [];
+        bookmarkTags[b.id].push(tagName.toLowerCase());
       });
     });
-
-    if (loose.length) {
-      allFolders.unshift({ title: "Loose Bookmarks", children: loose });
-    }
-
-    renderAllPages();
-    // After initial render, ensure transform uses the measured width
-    updatePageTransform();
-  });
+  }
 }
 
-function loadTags() {
-  browser.bookmarks.getTree().then(tree => {
-    const rootChildren = tree[0].children || [];
-    const tagsRoot = rootChildren.find(child => child.title === "Tags");
-
-    bookmarkTags = {};
-
-    if (tagsRoot && tagsRoot.children) {
-      tagsRoot.children.forEach(tagFolder => {
-        const tagName = tagFolder.title;
-        (tagFolder.children || []).forEach(b => {
-          if (!bookmarkTags[b.id]) bookmarkTags[b.id] = [];
-          bookmarkTags[b.id].push(tagName.toLowerCase());
-        });
-      });
-    }
-  });
-}
-
-/* In case the popup frame changes size (rare), keep transform correct */
-window.addEventListener("resize", () => updatePageTransform());
-
-/* --- Apply user options --- */
-function applyOptions() {
-  browser.storage.local.get(["background", "theme"]).then(res => {
-    if (res.background) {
-      document.body.style.backgroundImage = `url("${res.background}")`;
-      document.body.style.backgroundSize = "cover";
-      document.body.style.backgroundPosition = "center";
-    }
-    if (res.theme === "light") {
-      document.body.classList.add("light-theme");
-    } else {
-      document.body.classList.remove("light-theme");
-    }
-  });
-
-  browser.storage.local.get("pinnedFolders").then(res => {
-  pinnedFolders = new Set(res.pinnedFolders || []);
-});
-}
-
-applyOptions();
-
-/* Init */
-loadBookmarks();
-loadTags();
-
-
+/* --- Focus helper --- */
 function focusSearchWhenReady(input) {
   function tryFocus() {
     if (document.hasFocus() && input.offsetParent !== null) {
-      // Popup is active and input is visible
       input.focus();
     } else {
-      // Try again on the next frame
       requestAnimationFrame(tryFocus);
     }
   }
   tryFocus();
 }
 
-window.addEventListener("load", () => {
-  browser.storage.local.get("startupFocus").then(res => {
-    const mode = res.startupFocus || "search"; // default
-    if (mode === "search") {
-      const searchInput = document.getElementById("search");
-      focusSearchWhenReady(searchInput);
-    } else {
-      // Navigation mode
-      if (document.activeElement) {
-        setTimeout(() => document.activeElement.blur(), 500);
-      }
+/* --- Init Popup --- */
+async function initPopup() {
+  const res = await browser.storage.local.get([
+    "background",
+    "theme",
+    "startupFocus",
+    "pinnedFolders"
+  ]);
+
+  // Apply theme & background
+  if (res.background) {
+    document.body.style.backgroundImage = `url("${res.background}")`;
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundPosition = "center";
+  }
+  if (res.theme === "light") {
+    document.body.classList.add("light-theme");
+  } else {
+    document.body.classList.remove("light-theme");
+  }
+
+  // Init pinned folders
+  pinnedFolders = new Set(res.pinnedFolders || []);
+
+  // Load bookmarks & tags
+  await loadBookmarks();
+  await loadTags();
+
+  // Handle startup focus
+  const searchInput = document.getElementById("search");
+  const mode = res.startupFocus || "search";
+  if (mode === "search") {
+    focusSearchWhenReady(searchInput);
+  } else {
+    if (document.activeElement) {
+      document.activeElement.blur();
     }
-  });
-});
+  }
+}
+
+/* --- Resize handler --- */
+window.addEventListener("resize", () => updatePageTransform());
+
+/* --- Boot --- */
+document.addEventListener("DOMContentLoaded", initPopup);
