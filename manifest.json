@@ -7,7 +7,10 @@
   "browser_action": {
     "default_popup": "bookmarks.html",
     "default_icon": {
-      "48": "images/icon.jpeg"
+      "48": "images/icon-dark.png"
     }
+  },
+  "options_ui": {
+    "page": "options.html"
   }
 }
