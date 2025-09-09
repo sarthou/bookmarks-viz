@@ -212,11 +212,30 @@ function applyOptions() {
 
 applyOptions();
 
-window.addEventListener("load", () => {
-  const searchInput = document.getElementById("search");
-  if (searchInput) {
-    console.log("Trying to focus search bar");
-    setTimeout(() => searchInput.focus(), 500); // tiny delay ensures popup is active
-    console.log("Active element is now:", document.activeElement);
+function focusSearchWhenReady(input) {
+  function tryFocus() {
+    if (document.hasFocus() && input.offsetParent !== null) {
+      // Popup is active and input is visible
+      input.focus();
+    } else {
+      // Try again on the next frame
+      requestAnimationFrame(tryFocus);
+    }
   }
+  tryFocus();
+}
+
+window.addEventListener("load", () => {
+  browser.storage.local.get("startupFocus").then(res => {
+    const mode = res.startupFocus || "search"; // default
+    if (mode === "search") {
+      const searchInput = document.getElementById("search");
+      focusSearchWhenReady(searchInput);
+    } else {
+      // Navigation mode
+      if (document.activeElement) {
+        setTimeout(() => document.activeElement.blur(), 500);
+      }
+    }
+  });
 });

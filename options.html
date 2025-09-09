@@ -33,19 +33,29 @@
   </style>
 </head>
 <body>
-  <h2>Bookmarks Visualizer – Options</h2>
+  <h1>Bookmarks Visualizer – Options</h1>
 
   <div class="option">
-    <label for="bg">Background image URL:</label>
+    <h2>Background image URL:</h2>
     <input type="text" id="bg" placeholder="https://example.com/image.jpg">
   </div>
 
   <div class="option">
-    <label for="theme">Theme:</label>
-    <select id="theme">
-      <option value="dark">Dark (black boxes, white text)</option>
-      <option value="light">Light (white boxes, black text)</option>
-    </select>
+    <h2>Theme</h2>
+    <label class="switch theme-switch">
+      <input type="checkbox" id="themeToggle">
+      <span class="slider"></span>
+    </label>
+    <span id="themeLabel">Light Mode</span>
+  </div>
+
+  <div class="option">
+    <h2>Startup Focus</h2>
+    <label class="switch">
+      <input type="checkbox" id="focusSearchToggle">
+      <span class="slider"></span>
+    </label>
+    <span id="toggleLabel">Focus search bar on popup open</span>
   </div>
 
   <button id="save">Save</button>
