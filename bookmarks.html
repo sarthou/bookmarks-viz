@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bookmarks Visualizer</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+
+<body>
+  <div class="overlay"></div>
+
+  <div class="container">
+    <div class="search-container">
+      <input type="text" id="search" placeholder="Search bookmarks by name or tag...">
+    </div>
+
+    <div class="viewer">
+      <button id="prev"><i class="fas fa-angle-left"></i></button>
+      <div class="folders-container">
+        <div class="folders-wrapper" id="folders"></div>
+      </div>
+      <button id="next"><i class="fas fa-angle-right"></i></button>
+    </div>
+  </div>
+
+  <script src="bookmarks.js"></script>
+</body>
+
+
+</html>
