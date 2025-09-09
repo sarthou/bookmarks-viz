@@ -1,4 +1,5 @@
 let allFolders = [];
+let bookmarkTags = {}; // { bookmarkId: ["tag1","tag2"] }
 let currentPage = 0;
 const foldersPerPage = 3;
 
@@ -9,7 +10,7 @@ function createBookmarkItem(b) {
   const favicon = document.createElement("img");
   favicon.className = "favicon";
   try {
-    favicon.src = "https://www.google.com/s2/favicons?domain=" + new URL(b.url).hostname;
+    favicon.src = "https://www.google.com/s2/favicons?sz=32&domain_url=" + new URL(b.url).hostname;
   } catch {
     favicon.src = "";
   }
@@ -105,17 +106,33 @@ document.getElementById("search").addEventListener("input", e => {
   const q = e.target.value.trim().toLowerCase();
   if (!q) {
     renderAllPages();
-    // align transform to new width if any
     updatePageTransform();
     return;
   }
 
   const filtered = [];
+
   allFolders.forEach(folder => {
-    const matches = (folder.children || []).filter(
-      b => b.url && (b.title || "").toLowerCase().includes(q)
-    );
-    if (matches.length) {
+    const folderTitleMatch = (folder.title || "").toLowerCase().includes(q);
+
+    let matches = [];
+    if (folder.children) {
+      matches = folder.children.filter(b => {
+        if (!b.url) return false;
+        const titleMatch = (b.title || "").toLowerCase().includes(q) ||
+                           (b.url || "").toLowerCase().includes(q);
+        const tagMatch = (bookmarkTags[b.id] || []).some(tag =>
+          tag.includes(q)
+        );
+        return titleMatch || tagMatch;
+      });
+    }
+
+    if (folderTitleMatch && folder.children) {
+      // Folder matches → keep everything
+      filtered.push({ title: folder.title, children: folder.children });
+    } else if (matches.length) {
+      // Some children match → keep only them
       filtered.push({ title: folder.title, children: matches });
     }
   });
@@ -151,12 +168,30 @@ function loadBookmarks() {
   });
 }
 
+function loadTags() {
+  browser.bookmarks.getSubTree("tags").then(tree => {
+    const tagsRoot = tree[0];
+    bookmarkTags = {};
+
+    if (tagsRoot && tagsRoot.children) {
+      tagsRoot.children.forEach(tagFolder => {
+        const tagName = tagFolder.title;
+        (tagFolder.children || []).forEach(b => {
+          if (!bookmarkTags[b.id]) bookmarkTags[b.id] = [];
+          bookmarkTags[b.id].push(tagName.toLowerCase());
+        });
+      });
+    }
+  });
+}
+
+
 /* In case the popup frame changes size (rare), keep transform correct */
 window.addEventListener("resize", () => updatePageTransform());
 
 /* Init */
 loadBookmarks();
-
+loadTags();
 
 /* --- Apply user options --- */
 function applyOptions() {
