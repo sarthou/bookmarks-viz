@@ -1,79 +1,20 @@
-let currentIndex = 0;
-const foldersPerPage = 3;
 let allFolders = [];
+let currentPage = 0;
+const foldersPerPage = 3;
 
-function renderFolders() {
-  const container = document.getElementById("folders");
-  container.innerHTML = "";
-
-  const visible = allFolders.slice(currentIndex, currentIndex + foldersPerPage);
-  visible.forEach(folder => {
-    const box = document.createElement("div");
-    box.className = "folder-box";
-
-    const title = document.createElement("h3");
-    title.textContent = folder.title || "Untitled Folder";
-    box.appendChild(title);
-
-    const list = document.createElement("ul");
-    folder.children.forEach(b => {
-    if (b.url) {
-      list.appendChild(createBookmarkItem(b));
-    }
-    });
-    box.appendChild(list);
-
-    container.appendChild(box);
-  });
-}
-
-function loadBookmarks() {
-  browser.bookmarks.getTree().then(tree => {
-    const rootChildren = tree[0].children;
-
-    allFolders = [];
-    const looseBookmarks = [];
-
-    rootChildren.forEach(root => {
-      if (root.children) {
-        root.children.forEach(child => {
-          if (child.children) {
-            // It's a folder → keep it
-            allFolders.push(child);
-          } else if (child.url) {
-            // It's a bookmark → keep it for a special box
-            looseBookmarks.push(child);
-          }
-        });
-      }
-    });
-
-    // If there are direct bookmarks, group them in a synthetic folder
-    if (looseBookmarks.length > 0) {
-      allFolders.unshift({
-        title: "Loose Bookmarks",
-        children: looseBookmarks
-      });
-    }
-
-    renderFolders();
-  });
-}
-
+/* --- Helpers --- */
 function createBookmarkItem(b) {
   const li = document.createElement("li");
 
-  // favicon
   const favicon = document.createElement("img");
   favicon.className = "favicon";
   try {
     favicon.src = "https://www.google.com/s2/favicons?domain=" + new URL(b.url).hostname;
-  } catch (e) {
-    favicon.src = ""; // fallback if URL parsing fails
+  } catch {
+    favicon.src = "";
   }
   li.appendChild(favicon);
 
-  // link text
   const a = document.createElement("a");
   a.href = b.url;
   a.textContent = b.title || b.url;
@@ -83,57 +24,135 @@ function createBookmarkItem(b) {
   return li;
 }
 
+function getTotalPages(folders = allFolders) {
+  return Math.max(1, Math.ceil(folders.length / foldersPerPage));
+}
 
+function pageWidthPx() {
+  const el = document.querySelector(".folders-container");
+  return el ? el.clientWidth : 0;
+}
+
+function updateArrows(folders = allFolders) {
+  const prevBtn = document.getElementById("prev");
+  const nextBtn = document.getElementById("next");
+  const total = getTotalPages(folders);
+
+  prevBtn.disabled = currentPage <= 0;
+  nextBtn.disabled = currentPage >= total - 1;
+}
+
+function updatePageTransform(folders = allFolders) {
+  const wrapper = document.getElementById("folders");
+  const w = pageWidthPx();
+  wrapper.style.transform = `translateX(-${currentPage * w}px)`;
+  updateArrows(folders);
+}
+
+/* Render all pages for the given folder set */
+function renderAllPages(folders = allFolders) {
+  const wrapper = document.getElementById("folders");
+  wrapper.innerHTML = "";
+
+  for (let i = 0; i < folders.length; i += foldersPerPage) {
+    const page = document.createElement("div");
+    page.className = "folders-page";
+
+    folders.slice(i, i + foldersPerPage).forEach(folder => {
+      const box = document.createElement("div");
+      box.className = "folder-box";
+
+      const title = document.createElement("h3");
+      title.textContent = folder.title || "Untitled Folder";
+      box.appendChild(title);
+
+      const list = document.createElement("ul");
+      (folder.children || []).forEach(b => {
+        if (b.url) list.appendChild(createBookmarkItem(b));
+      });
+      box.appendChild(list);
+
+      page.appendChild(box);
+    });
+
+    wrapper.appendChild(page);
+  }
+
+  currentPage = 0;
+  // Ensure first paint is aligned before any transition
+  wrapper.style.transform = "translateX(0)";
+  updateArrows(folders);
+}
+
+/* --- Events --- */
 document.getElementById("prev").addEventListener("click", () => {
-  if (currentIndex > 0) {
-    currentIndex -= foldersPerPage;
-    renderFolders();
+  if (currentPage > 0) {
+    currentPage--;
+    updatePageTransform();
   }
 });
 
 document.getElementById("next").addEventListener("click", () => {
-  if (currentIndex + foldersPerPage < allFolders.length) {
-    currentIndex += foldersPerPage;
-    renderFolders();
+  const total = getTotalPages();
+  if (currentPage < total - 1) {
+    currentPage++;
+    updatePageTransform();
   }
 });
 
+/* Search (by title for now) */
 document.getElementById("search").addEventListener("input", e => {
-  const query = e.target.value.toLowerCase();
-  if (!query) {
-    renderFolders();
+  const q = e.target.value.trim().toLowerCase();
+  if (!q) {
+    renderAllPages();
+    // align transform to new width if any
+    updatePageTransform();
     return;
   }
-  const results = [];
+
+  const filtered = [];
   allFolders.forEach(folder => {
-    const matches = folder.children.filter(b => {
-      return (b.title && b.title.toLowerCase().includes(query));
-      // TODO: add tags support here later
-    });
-    if (matches.length > 0) {
-      results.push({ title: folder.title, children: matches });
+    const matches = (folder.children || []).filter(
+      b => b.url && (b.title || "").toLowerCase().includes(q)
+    );
+    if (matches.length) {
+      filtered.push({ title: folder.title, children: matches });
     }
   });
-  const container = document.getElementById("folders");
-  container.innerHTML = "";
-  results.forEach(folder => {
-    const box = document.createElement("div");
-    box.className = "folder-box";
 
-    const title = document.createElement("h3");
-    title.textContent = folder.title;
-    box.appendChild(title);
-
-    const list = document.createElement("ul");
-    folder.children.forEach(b => {
-      if (b.url) {
-        list.appendChild(createBookmarkItem(b));
-      }
-    });
-
-    box.appendChild(list);
-    container.appendChild(box);
-  });
+  renderAllPages(filtered);
+  updatePageTransform(filtered);
 });
 
+/* Load bookmarks from both root sections and collect loose bookmarks */
+function loadBookmarks() {
+  browser.bookmarks.getTree().then(tree => {
+    const rootChildren = (tree[0] && tree[0].children) || [];
+    const loose = [];
+    allFolders = [];
+
+    rootChildren.forEach(root => {
+      (root.children || []).forEach(child => {
+        if (child.children) {
+          allFolders.push(child);
+        } else if (child.url) {
+          loose.push(child);
+        }
+      });
+    });
+
+    if (loose.length) {
+      allFolders.unshift({ title: "Loose Bookmarks", children: loose });
+    }
+
+    renderAllPages();
+    // After initial render, ensure transform uses the measured width
+    updatePageTransform();
+  });
+}
+
+/* In case the popup frame changes size (rare), keep transform correct */
+window.addEventListener("resize", () => updatePageTransform());
+
+/* Init */
 loadBookmarks();

@@ -1,81 +1,3 @@
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  background: #111;
-  color: #fff;
-
-  width: 700px;
-  height: 300px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  /*overflow: hidden;   /* prevent outside scroll */
-}
-
-.container {
-  width: 95%;
-  height: 80%;
-  display: flex;
-  flex-direction: column;
-}
-
-.search-container {
-  text-align: center;
-  margin-bottom: 15px;
-}
-
-#search {
-  width: 60%;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  font-size: 1rem;
-}
-
-.viewer {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden; /* hide overflow for sliding */
-}
-
-.folders-wrapper {
-  display: flex;
-  transition: transform 0.5s ease;
-  height: 100%;
-  width: 80%;
-}
-
-.folders-page {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  flex: 0 0 100%; /* each page takes full width */
-}
-
-.folder-box {
-  background: rgba(0,0,0,0.6);
-  border-radius: 12px;
-  padding: 10px;
-  overflow-y: auto;
-}
-
-.viewer button {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 2rem;
-  cursor: pointer;
-  margin: 0 20px;
-  transition: color 0.3s;
-}
-
-.viewer button:hover {
-  color: #ffcc00;
-}
-
 .overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -84,35 +6,145 @@ body {
   z-index: -1;
 }
 
-/* Remove default link styling */
-.folder-box a {
-  color: white;
-  text-decoration: none;
-  display: inline-block;
-  margin-left: 5px;
+/* Make all sizing predictable */
+* { box-sizing: border-box; }
+
+/* Fixed popup window */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #111;
+  color: #fff;
+  width: 800px;
+  height: 400px;
+  /*overflow: hidden; /* no scrollbars */
 }
 
-/* Change hover effect (optional) */
-.folder-box a:hover {
-  color: #ffcc00;
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
 }
 
-/* Remove list bullets */
+/* Search bar */
+.search-container {
+  text-align: center;
+  padding: 10px;
+}
+
+#search {
+  width: 70%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+}
+
+/* Viewer (arrows + slider) */
+.viewer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* center the slider between arrows */
+  width: 100%;
+  height: calc(100% - 60px); /* leave room for search row */
+  overflow: hidden;
+}
+
+/* Arrow buttons — fixed width, NO margins */
+.viewer button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2rem;
+  cursor: pointer;
+  flex: 0 0 56px;   /* reserve exact space */
+  width: 56px;
+  height: 56px;
+  transition: color 0.25s ease, opacity 0.25s ease;
+}
+
+.viewer button:hover { color: #ffcc00; }
+.viewer button:disabled { opacity: 0.35; pointer-events: none; }
+
+/* Sliding area: total width = 800 - 56 - 56 = 688px */
+.folders-container {
+  width: calc(100% - 112px);  /* fill all space between arrows */
+  height: 100%;
+  overflow: hidden;           /* hide sliding overflow */
+  display: flex;
+  align-items: center;
+}
+
+.folders-wrapper {
+  display: flex;              /* pages laid out horizontally */
+  height: 100%;
+  transition: transform 0.45s ease;
+}
+
+/* Each page fills the sliding area exactly */
+.folders-page {
+  flex: 0 0 100%;             /* exactly the width of folders-container */
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 equal columns, no overflow */
+  column-gap: 16px;
+  row-gap: 12px;
+  padding: 10px;
+}
+
+/* Folder boxes */
+.folder-box {
+  min-width: 0;               /* allow shrinking inside grid */
+  display: flex;
+  flex-direction: column;
+  background: rgba(0,0,0,0.6);
+  border-radius: 12px;
+  padding: 10px;
+  overflow: hidden;           /* clip internal overflow */
+}
+
+/* Scroll only the list inside the box */
 .folder-box ul {
   list-style: none;
   padding-left: 0;
+  margin: 0;
+  overflow-y: auto;
 }
 
-/* List items with favicon */
+/* Title */
+.folder-box h3 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  padding-bottom: 5px;
+}
+
+/* Items */
 .folder-box li {
   display: flex;
   align-items: center;
-  margin: 4px 0;
+  gap: 6px;
+  margin: 5px 0;
+  min-width: 0;               /* prevents text from forcing width */
 }
 
 .folder-box img.favicon {
   width: 16px;
   height: 16px;
-  margin-right: 6px;
   border-radius: 3px;
+  flex: 0 0 auto;
 }
+
+.folder-box a {
+  color: #fff;
+  text-decoration: none;
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;    /* long titles won’t blow layout */
+}
+
+.folder-box a:hover { color: #ffcc00; }
