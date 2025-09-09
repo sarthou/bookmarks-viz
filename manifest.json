@@ -8,7 +8,14 @@
     "default_popup": "bookmarks.html",
     "default_icon": {
       "48": "images/icon-dark.png"
-    }
+    },
+    "theme_icons": [
+      {
+        "light": "images/icon-dark.png",
+        "dark": "images/icon-light.png",
+        "size": 48
+      }
+    ]
   },
   "options_ui": {
     "page": "options.html",
