@@ -211,3 +211,12 @@ function applyOptions() {
 }
 
 applyOptions();
+
+window.addEventListener("load", () => {
+  const searchInput = document.getElementById("search");
+  if (searchInput) {
+    console.log("Trying to focus search bar");
+    setTimeout(() => searchInput.focus(), 500); // tiny delay ensures popup is active
+    console.log("Active element is now:", document.activeElement);
+  }
+});
