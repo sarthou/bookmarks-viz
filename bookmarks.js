@@ -16,6 +16,32 @@ function togglePin(folderId) {
   renderAllPages();
 }
 
+function createPinElement(isPinned) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("width", "16");
+  svg.setAttribute("height", "16");
+
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute(
+    "d",
+    "M12 2L15 8H21L16.5 12L18 18L12 14L6 18L7.5 12L3 8H9L12 2Z"
+  );
+
+  if (isPinned) {
+    svg.setAttribute("fill", "currentColor");
+    path.setAttribute("stroke", "currentColor");
+  } else {
+    svg.setAttribute("fill", "none");
+    path.setAttribute("stroke", "currentColor");
+    path.setAttribute("stroke-width", "2");
+  }
+
+  svg.appendChild(path);
+  return svg;
+}
+
+
 /* --- Helpers --- */
 function createBookmarkItem(b) {
   const li = document.createElement("li");
@@ -91,13 +117,7 @@ function renderAllPages(folders = allFolders) {
 
       const pin = document.createElement("span");
       pin.className = "folder-pin";
-      pin.innerHTML = pinnedFolders.has(folder.id)
-        ? `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
-            <path d="M12 2L15 8H21L16.5 12L18 18L12 14L6 18L7.5 12L3 8H9L12 2Z" />
-          </svg>`
-        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2L15 8H21L16.5 12L18 18L12 14L6 18L7.5 12L3 8H9L12 2Z" />
-          </svg>`;
+      pin.appendChild(createPinElement(pinnedFolders.has(folder.id)));
 
       pin.addEventListener("click", e => {
         e.stopPropagation();

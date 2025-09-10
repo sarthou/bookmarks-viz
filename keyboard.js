@@ -141,6 +141,7 @@ document.addEventListener("keydown", e => {
         window.close(); // close popup
         break;
       case "ArrowDown":
+        e.preventDefault();
         focusFirstBookmark();
         break;
     }
@@ -156,18 +157,22 @@ document.addEventListener("keydown", e => {
         break;
       case "ArrowDown":
         e.preventDefault();
+        e.stopImmediatePropagation();
         focusNextBookmark(active, +1);
         break;
       case "ArrowUp":
         e.preventDefault();
+        e.stopImmediatePropagation();
         focusNextBookmark(active, -1);
         break;
       case "ArrowLeft":
         e.preventDefault();
+        e.stopImmediatePropagation();
         focusNextBox(active, -1);
         break;
       case "ArrowRight":
         e.preventDefault();
+        e.stopImmediatePropagation();
         focusNextBox(active, +1);
         break;
       case "Escape":

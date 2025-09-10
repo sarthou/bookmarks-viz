@@ -1,8 +1,7 @@
 .overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: url("images/background.jpeg") center/cover no-repeat;
-  opacity: 0.2;
+  background: url("images/background.jpg") center/cover no-repeat;
   z-index: -1;
 }
 
@@ -13,11 +12,10 @@
 body {
   font-family: Arial, sans-serif;
   margin: 0;
-  background: #111;
   color: #fff;
   width: 800px;
   height: 400px;
-  /*overflow: hidden; /* no scrollbars */
+  overflow: hidden; /* no scrollbars */
 }
 
 .container {
