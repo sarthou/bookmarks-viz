@@ -1,9 +1,12 @@
 {
   "manifest_version": 2,
   "name": "Bookmarks Visualizer",
-  "version": "1.0",
+  "version": "1.2",
   "description": "Visualize bookmarks with folders, tags, and search.",
-  "permissions": ["bookmarks", "storage"],
+  "permissions": [
+    "bookmarks",
+    "storage"
+  ],
   "browser_action": {
     "default_popup": "bookmarks.html",
     "default_icon": {

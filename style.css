@@ -1,12 +1,17 @@
 .overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: url("images/background.jpg") center/cover no-repeat;
   z-index: -1;
 }
 
 /* Make all sizing predictable */
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 /* Fixed popup window */
 body {
@@ -15,7 +20,8 @@ body {
   color: #fff;
   width: 800px;
   height: 400px;
-  overflow: hidden; /* no scrollbars */
+  overflow: hidden;
+  /* no scrollbars */
 }
 
 .container {
@@ -44,49 +50,53 @@ body {
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center; /* center the slider between arrows */
+  justify-content: center;
   width: 100%;
-  height: calc(100% - 60px); /* leave room for search row */
+  height: calc(100% - 60px);
   overflow: hidden;
 }
 
-/* Arrow buttons — fixed width, NO margins */
+/* Arrow buttons */
 .viewer button {
   background: none;
   border: none;
   color: #fff;
   font-size: 2rem;
   cursor: pointer;
-  flex: 0 0 56px;   /* reserve exact space */
+  flex: 0 0 56px;
   width: 56px;
   height: 56px;
   transition: color 0.25s ease, opacity 0.25s ease;
 }
 
-.viewer button:hover { color: #0084ff; }
-.viewer button:disabled { opacity: 0.35; pointer-events: none; }
+.viewer button:hover {
+  color: #0084ff;
+}
 
-/* Sliding area: total width = 800 - 56 - 56 = 688px */
+.viewer button:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
 .folders-container {
-  width: calc(100% - 112px);  /* fill all space between arrows */
+  width: calc(100% - 112px);
   height: 100%;
-  overflow: hidden;           /* hide sliding overflow */
+  overflow: hidden;
   display: flex;
   align-items: center;
 }
 
 .folders-wrapper {
-  display: flex;              /* pages laid out horizontally */
+  display: flex;
   height: 100%;
   transition: transform 0.45s ease;
 }
 
-/* Each page fills the sliding area exactly */
 .folders-page {
-  flex: 0 0 100%;             /* exactly the width of folders-container */
+  flex: 0 0 100%;
   height: 100%;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 equal columns, no overflow */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   column-gap: 16px;
   row-gap: 12px;
   padding: 10px;
@@ -97,58 +107,94 @@ body {
   min-width: 192px;
   display: flex;
   flex-direction: column;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   border-radius: 12px;
   padding: 10px;
-  overflow: hidden;           /* clip internal overflow */
+  overflow: hidden;
 }
 
-/* Scroll only the list inside the box */
+/* List container - handles the main scrollbar */
 .folder-box ul {
   list-style: none;
   padding-left: 0;
   margin: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  /* Prevent horizontal jitter */
 }
 
-/* Title */
 .folder-box h3 {
   margin: 0 0 10px;
 }
 
-/* Items */
+/* Base item row (bookmarks and sub-folder headers) */
 .folder-box li {
+  margin: 2px 0;
+  min-width: 0;
+}
+
+/* --- Sub-folder Nesting & Keyboard Alignment --- */
+
+/* The clickable header for subfolders */
+.sub-folder-header,
+.item-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 5px 0;
-  min-width: 0;               /* prevents text from forcing width */
+  gap: 8px;
+  padding: 4px 6px;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
 }
 
-.folder-box img.favicon {
+/* Ensure icons don't shrink */
+.sub-folder-header svg,
+.favicon {
+  flex: 0 0 16px;
   width: 16px;
   height: 16px;
-  border-radius: 3px;
-  flex: 0 0 auto;
 }
 
+/* Truncate text for both bookmarks and subfolders */
+.sub-folder-title,
 .folder-box a {
-  color: #fff;
-  text-decoration: none;
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 1;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;    /* long titles won’t blow layout */
+  text-overflow: ellipsis;
+  color: inherit;
+  text-decoration: none;
 }
 
-.folder-box a:hover { color: #0084ff; }
-body.light-theme .folder-box a:hover { color: #0084ff; }
+/* Hierarchy Visual Guide */
+.sub-list-nest {
+  margin-left: 10px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
 
-/* Dark is default */
+/* Focus state for keyboard.js navigation */
+.sub-folder-header:focus,
+.folder-box a:focus {
+  background-color: rgba(0, 132, 255, 0.3);
+  outline: none;
+}
+
+/* --- Theme Specifics --- */
+
+/* Dark (Default) */
 .folder-box {
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   color: #c9c9c9;
+}
+
+.folder-box a:hover,
+.sub-folder-header:hover {
+  color: #0084ff;
 }
 
 /* Light theme overrides */
@@ -157,7 +203,7 @@ body.light-theme {
 }
 
 body.light-theme .folder-box {
-  background: rgba(255,255,255,0.6);
+  background: rgba(255, 255, 255, 0.6);
   color: #1f1f1f;
 }
 
@@ -165,11 +211,50 @@ body.light-theme .folder-box a {
   color: #1f1f1f;
 }
 
-body.light-theme .folder-box h3 {
-  border-bottom: 2px solid rgba(24, 24, 24, 0.644);
+body.light-theme .sub-list-nest {
+  border-left-color: rgba(0, 0, 0, 0.2);
 }
 
-/* The switch - the container */
+body.light-theme .folder-box h3 {
+  border-bottom: 2px solid rgba(24, 24, 24, 0.6);
+}
+
+/* --- Existing Switches & Pins --- */
+
+.folder-title-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.folder-pin {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.folder-pin svg {
+  width: 25px;
+  height: 25px;
+  display: block;
+}
+
+.folder-pin svg[fill="currentColor"] {
+  color: #0084ff;
+}
+
+.folder-pin:hover {
+  transform: scale(1.2);
+  color: #0084ff;
+}
+
+/* Switch remains same... */
 .switch {
   position: relative;
   display: inline-block;
@@ -178,19 +263,19 @@ body.light-theme .folder-box h3 {
   margin-right: 10px;
 }
 
-/* Hide default checkbox */
 .switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-/* The slider */
 .slider {
   position: absolute;
   cursor: pointer;
-  top: 0; left: 0;
-  right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: #ccc;
   transition: 0.4s;
   border-radius: 28px;
@@ -208,59 +293,19 @@ body.light-theme .folder-box h3 {
   border-radius: 50%;
 }
 
-/* Checked state */
-input:checked + .slider {
+input:checked+.slider {
   background-color: #4caf50;
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
   transform: translateX(22px);
 }
 
-/* Checked = Dark mode */
-.theme-switch input:checked + .slider {
-  background-color: #4a4a4a; /* Dark bg */
+.theme-switch input:checked+.slider {
+  background-color: #4a4a4a;
 }
 
-.theme-switch input:checked + .slider:before {
+.theme-switch input:checked+.slider:before {
   transform: translateX(32px);
-}
-
-/* Optional: add glowing effect on toggle movement */
-.theme-switch input:checked + .slider:before {
   box-shadow: 0 0 5px #fff;
-}
-
-.folder-title-container {
-  display: flex;
-  align-items: center;
-  gap: 6px; /* space between pin and title */
-  margin: 0 0 10px;
-  font-size: 1.1rem;
-  border-bottom: 2px solid rgba(255,255,255,0.2);
-}
-
-.folder-pin {
-  display: inline-flex;
-  align-items: center;
-  margin-right: 6px;
-  cursor: pointer;
-  color: #888; /* outline by default */
-  transition: color 0.2s, transform 0.2s;
-}
-
-.folder-pin svg {
-  width: 25px;
-  height: 25px;
-  display: block;
-}
-
-.folder-pin svg[fill="currentColor"] {
-  color: #0084ff; /* gold for pinned */
-}
-
-/* optional: hover effect */
-.folder-pin:hover {
-  transform: scale(1.2);
-  color: #0084ff;
 }
